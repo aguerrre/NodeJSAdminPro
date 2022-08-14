@@ -1,18 +1,33 @@
 const { response } = require("express");
 const bcrypt = require("bcryptjs");
-const mongoose = require("mongoose");
-const { BSONTypeError } = require("bson");
+const ObjectId = require("mongoose").Types.ObjectId;
 
 const User = require("../models/user.model");
 const { generateJWT } = require("../helpers/jwt");
 
 const getUsers = async (req, res) => {
-  const users = await User.find({}, "first_name email role google_auth");
+  const page = Number(req.query.page) >= 1 ? Number(req.query.page) : 0;
+  const perPage = 10;
+
+  const [users, total] = await Promise.all([
+    page === 0
+      ? User.find({}, "first_name email role google_auth img")
+      : User.find({}, "first_name email role google_auth img")
+          .limit(perPage)
+          .skip(perPage * (page - 1)),
+    User.countDocuments(),
+  ]);
+
+  const totalPages =
+    total % perPage !== 0
+      ? Math.floor(total / perPage) + 1
+      : Math.floor(total / perPage);
 
   res.json({
     ok: true,
     users: users,
-    uid: req.uid,
+    total: total,
+    totalPages,
   });
 };
 
@@ -55,10 +70,16 @@ const createUser = async (req, res = response) => {
 const updateUser = async (req, res = response) => {
   try {
     const uid = req.params.id;
+    if (!ObjectId.isValid(uid)) {
+      return res.status(400).json({
+        ok: false,
+        msg: "El id de usuario no es válido.",
+      });
+    }
     const existsUser = await User.findById(uid);
 
     if (!existsUser) {
-      res.status(404).json({
+      return res.status(404).json({
         ok: false,
         msg: "No existe usuario con ese id.",
       });
@@ -96,7 +117,13 @@ const updateUser = async (req, res = response) => {
 
 const deleteUser = async (req, res = response) => {
   try {
-    const uid = mongoose.Types.ObjectId(req.params.id);
+    const uid = req.params.id;
+    if (!ObjectId.isValid(uid)) {
+      return res.status(400).json({
+        ok: false,
+        msg: "El id de usuario no es válido.",
+      });
+    }
     const user = await User.findById(uid);
     if (!user) {
       return res.status(404).json({
