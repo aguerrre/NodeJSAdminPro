@@ -5,16 +5,15 @@ const Hospital = require("../models/hospital.model");
 const Doctor = require("../models/doctor.model");
 
 const getDoctors = async (req, res = response) => {
-
   const doctors = await Doctor.find()
-    .populate('user', 'first_name img')
+    .populate("user", "first_name img")
     .populate({
-      path: 'hospital',
-      select: 'name img',
+      path: "hospital",
+      select: "name img",
       populate: {
-        path: 'user',
-        select: 'first_name'
-      }
+        path: "user",
+        select: "first_name",
+      },
     });
 
   res.json({
@@ -28,21 +27,26 @@ const createDoctor = async (req, res = response) => {
     const uid = req.uid;
     const { name, hospital } = req.body;
 
-    const existsHospital = await Hospital.findById(mongoose.Types.ObjectId(hospital));
+    const existsHospital = await Hospital.findById(
+      mongoose.Types.ObjectId(hospital)
+    );
     if (!existsHospital) {
       return res.status(404).json({
         ok: false,
         msg: "El hospital al que intenta asignar al doctor no existe.",
       });
     }
-    const doctor = new Doctor({ user: uid, hospital: existsHospital._id, ...req.body });
+    const doctor = new Doctor({
+      user: uid,
+      hospital: existsHospital._id,
+      ...req.body,
+    });
 
     const newDoctor = await doctor.save();
     res.json({
       ok: true,
       newDoctor,
     });
-
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -50,21 +54,69 @@ const createDoctor = async (req, res = response) => {
       msg: "Error inesperado.",
     });
   }
-  
 };
 
-const updateDoctor = (req, res = response) => {
-  res.json({
-    ok: true,
-    msg: "update Doctor",
-  });
+const updateDoctor = async (req, res = response) => {
+  try {
+    const doctorId = req.params.id;
+    const uid = req.uid;
+    const { hospital } = req.body;
+
+    const existsHospital = await Hospital.findById(
+      mongoose.Types.ObjectId(hospital)
+    );
+    if (!existsHospital) {
+      return res.status(404).json({
+        ok: false,
+        msg: "El hospital al que intenta asignar al doctor no existe.",
+      });
+    }
+
+    const changes = {
+      ...req.body,
+      user: uid,
+    };
+    const updatedDoctor = await Doctor.findByIdAndUpdate(doctorId, changes, { new: true });
+    if (!updatedDoctor) {
+      return res.status(404).json({
+        ok: false,
+        msg: "El doctor no existe con ese id.",
+      });
+    }
+
+    res.json({
+      ok: true,
+      doctor: updatedDoctor,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      msg: "Error inesperado",
+    });
+  }
 };
 
-const deleteDoctor = (req, res = response) => {
-  res.json({
-    ok: true,
-    msg: "delete Doctor",
-  });
+const deleteDoctor = async(req, res = response) => {
+  try {
+    const doctorId = req.params.id;
+    const deletedDoctor = await Doctor.findByIdAndDelete(doctorId);
+    if (!deletedDoctor) {
+      return res.status(404).json({
+        ok: false,
+        msg: "El doctor no existe con ese id.",
+      });
+    }
+
+    res.json({
+      ok: true,
+      doctor: deletedDoctor,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      msg: "Error inesperado",
+    });
+  }
 };
 
 module.exports = {

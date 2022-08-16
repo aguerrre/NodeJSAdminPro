@@ -20,15 +20,35 @@ router.post(
   "/",
   [
     validateJWT,
-    check('name', "El nombre es requerido.").notEmpty(),
-    check('hospital', "Debe ser asignado a un hospital.").notEmpty(),
-    check('hospital', "El id del hospital debe ser válido.").isMongoId(),
+    check("name", "El nombre es requerido.").notEmpty(),
+    check("hospital", "Debe ser asignado a un hospital.").notEmpty(),
+    check("hospital", "El id del hospital debe ser válido.").isMongoId(),
     validateFields,
   ],
-  createDoctor);
+  createDoctor
+);
 
-router.put("/:id", [], updateDoctor);
+router.put(
+  "/:id",
+  [
+    validateJWT,
+    check("name", "El nombre es requerido.").notEmpty(),
+    check("hospital", "Debe ser asignado a un hospital.").notEmpty(),
+    check("hospital", "El id del hospital debe ser válido.").isMongoId(),
+    check("id", "El id del doctor debe ser válido.").isMongoId(),
+    validateFields,
+  ],
+  updateDoctor
+);
 
-router.delete("/:id", deleteDoctor);
+router.delete(
+  "/:id",
+  [
+    validateJWT,
+    check("id", "El id del doctor debe ser válido.").isMongoId(),
+    validateFields,
+  ],
+  deleteDoctor
+);
 
 module.exports = router;
