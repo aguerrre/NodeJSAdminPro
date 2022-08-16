@@ -10,47 +10,41 @@ const deleteImageIfExists = (path) => {
   }
 };
 
-const updateImage = async (collection, id, filename) => {
+const getEntityAndDeleteExistingImage = async (collection, id, filename) => {
   switch (collection) {
     case "users":
       const user = await User.findById(id);
       if (!user) {
         console.log("no existe user");
-        return false;
+        return null;
       }
       const oldUserImage = `./uploads/users/${user.img}`;
       deleteImageIfExists(oldUserImage);
-      user.img = filename;
-      await user.save();
-      return true;
+      return user;
       break;
     case "doctors":
       const doctor = await Doctor.findById(id);
       if (!doctor) {
         console.log("no existe doctor");
-        return false;
+        return null;
       }
       const oldDoctorImage = `./uploads/doctors/${doctor.img}`;
       deleteImageIfExists(oldDoctorImage);
-      doctor.img = filename;
-      await doctor.save();
-      return true;
+      return doctor;
       break;
     case "hospitals":
       const hospital = await Hospital.findById(id);
       if (!hospital) {
         console.log("no existe hospital");
-        return false;
+        return null;
       }
       const oldHospitalImage = `./uploads/hospital/${hospital.img}`;
       deleteImageIfExists(oldHospitalImage);
-      hospital.img = filename;
-      await hospital.save();
-      return true;
+      return hospital;
       break;
     default:
-      return false;
+      return null;
   }
 };
 
-module.exports = { updateImage };
+module.exports = { getEntityAndDeleteExistingImage };

@@ -4,7 +4,7 @@ const ObjectId = require("mongoose").Types.ObjectId;
 const path = require("path");
 const fs = require("fs");
 
-const { updateImage } = require("../helpers/updateImage");
+const { getEntityAndDeleteExistingImage } = require("../helpers/updateImage");
 
 const uploadFile = async (req, res = response) => {
   try {
@@ -29,10 +29,23 @@ const uploadFile = async (req, res = response) => {
       });
     }
 
+    //Validar que se haya enviado una imagen
     if (!req.files || Object.keys(req.files).length === 0) {
       return res.status(400).json({
         ok: false,
         msg: "No se seleccionó ningún archivo.",
+      });
+    }
+
+    // Validar que el objetivo de la imagen exista en la BBDD.
+    let entity = null;
+    await getEntityAndDeleteExistingImage(collection, id).then(
+      (data) => (entity = data)
+    );
+    if (entity == null) {
+      return res.status(400).json({
+        ok: false,
+        msg: "No existe ningún registro para esa colección con ese id.",
       });
     }
 
@@ -52,6 +65,9 @@ const uploadFile = async (req, res = response) => {
     // generar nombre imagen unico.
     const filename = `${uuidv4()}.${extension}`;
 
+    // Asignar imagen a entidad
+    entity.img = filename;
+
     //path para guardar image
     const path = `./uploads/${collection}/${filename}`;
 
@@ -64,8 +80,8 @@ const uploadFile = async (req, res = response) => {
           msg: "Error inesperado al guardar la imagen en el servidor.",
         });
       }
-      //actualizar base de datos
-      updateImage(collection, id, filename);
+      // actualizar base de datos una vez la imagen se ha movido de sitio.
+      entity.save();
       res.json({
         ok: true,
         results: "Archivo subido",
