@@ -96,7 +96,15 @@ const updateUser = async (req, res = response) => {
         });
       }
     }
-    fields.email = email;
+
+    if (!existsUser.google_auth) {
+      fields.email = email;
+    } else if (!existsUser.email !== email) {
+      return res.status(400).json({
+        ok: false,
+        msg: "No puedes cambiar el email de tu cuenta de Google.",
+      });
+    }
 
     const updatedUser = await User.findByIdAndUpdate(uid, fields, {
       new: true,
