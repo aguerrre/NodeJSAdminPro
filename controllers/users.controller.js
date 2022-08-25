@@ -140,10 +140,10 @@ const deleteUser = async (req, res = response) => {
       });
     }
 
-    await User.findByIdAndDelete(uid);
+    const deletedUser = await User.findByIdAndDelete(uid);
     res.json({
       ok: true,
-      msg: "Usuario eliminado con éxito.",
+      user: deletedUser,
     });
   } catch (error) {
     console.log(error);
