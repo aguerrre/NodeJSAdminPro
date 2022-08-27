@@ -38,7 +38,7 @@ const getEntityAndDeleteExistingImage = async (collection, id, filename) => {
         console.log("no existe hospital");
         return null;
       }
-      const oldHospitalImage = `./uploads/hospital/${hospital.img}`;
+      const oldHospitalImage = `./uploads/hospitals/${hospital.img}`;
       deleteImageIfExists(oldHospitalImage);
       return hospital;
       break;

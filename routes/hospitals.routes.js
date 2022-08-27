@@ -15,7 +15,7 @@ const router = Router();
 /*
  * Ruta /api/users
  */
-router.get("/", getHospitals);
+router.get("/", [validateJWT], getHospitals);
 router.post(
   "/",
   [
